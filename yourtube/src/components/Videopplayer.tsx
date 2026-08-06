@@ -210,6 +210,8 @@ export default function Videopplayer({ video, nextVideoId }: VideoPlayerProps) {
     ? video?.filepath.replace("http://", "https://") 
     : `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000"}/${video?.filepath}`;
 
+  console.log("Computed Video URL:", videoUrl);
+
   return (
     <div 
       ref={containerRef}
