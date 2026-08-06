@@ -78,7 +78,31 @@ export const login = async (req, res) => {
         existingUser.otpExpiry = otpExpiry;
         await existingUser.save();
 
-        if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        if (process.env.BREVO_API_KEY) {
+          fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+              'accept': 'application/json',
+              'api-key': process.env.BREVO_API_KEY,
+              'content-type': 'application/json'
+            },
+            body: JSON.stringify({
+              sender: { name: 'YourTube Security', email: process.env.EMAIL_USER || 'majorghost111@gmail.com' },
+              to: [{ email: email }],
+              subject: "YourTube - Login Verification Code",
+              htmlContent: `
+                <div style="font-family: Arial, sans-serif; padding: 20px;">
+                  <h2>Login Verification</h2>
+                  <p>We detected a login attempt from a new device or location: <b>${locationString}</b>.</p>
+                  <p>Your verification code is: <b style="font-size: 24px; color: #dc2626;">${otp}</b></p>
+                  <p>This code will expire in 10 minutes.</p>
+                </div>
+              `
+            })
+          }).then(res => res.json())
+            .then(data => console.log("Brevo API Response:", data))
+            .catch(console.error);
+        } else if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
           transporter.sendMail({
             from: `"YourTube Security" <${process.env.EMAIL_USER}>`,
             to: email,
