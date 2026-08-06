@@ -207,7 +207,7 @@ export default function Videopplayer({ video, nextVideoId }: VideoPlayerProps) {
   };
 
   const videoUrl = video?.filepath?.startsWith("http") 
-    ? video?.filepath.replace("commondatastorage.googleapis.com", "storage.googleapis.com").replace("http://", "https://") 
+    ? video?.filepath.replace("http://", "https://") 
     : `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000"}/${video?.filepath}`;
 
   return (
