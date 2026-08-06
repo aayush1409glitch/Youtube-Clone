@@ -39,67 +39,67 @@ export const seedvideo = async (req, res) => {
     await video.deleteMany({});
     const videosList = [
       {
-        file: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        file: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
         title: "Big Buck Bunny - Animated Short",
         channel: "Blender Foundation"
       },
       {
-        file: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+        file: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
         title: "Elephants Dream - Short Film",
         channel: "Blender Foundation"
       },
       {
-        file: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+        file: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
         title: "Google Chromecast - For Bigger Blazes",
         channel: "Google TV"
       },
       {
-        file: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+        file: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
         title: "Google Chromecast - For Bigger Escapes",
         channel: "Google TV"
       },
       {
-        file: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+        file: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
         title: "Google Chromecast - For Bigger Fun",
         channel: "Google TV"
       },
       {
-        file: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+        file: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
         title: "Google Chromecast - For Bigger Joyrides",
         channel: "Google TV"
       },
       {
-        file: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
+        file: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
         title: "Google Chromecast - For Bigger Meltdowns",
         channel: "Google TV"
       },
       {
-        file: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+        file: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
         title: "Sintel - Open Movie Project Trailer",
         channel: "Blender Foundation"
       },
       {
-        file: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
+        file: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
         title: "Subaru Outback - On Street and Dirt",
         channel: "Auto Review"
       },
       {
-        file: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+        file: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
         title: "Tears of Steel - Sci-Fi Short",
         channel: "Blender Foundation"
       },
       {
-        file: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4",
+        file: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4",
         title: "Volkswagen GTI Review",
         channel: "Auto Review"
       },
       {
-        file: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4",
+        file: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4",
         title: "We Are Going On Bullrun",
         channel: "Roadtrippers"
       },
       {
-        file: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4",
+        file: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4",
         title: "What car can you get for a grand?",
         channel: "Car Show"
       },
