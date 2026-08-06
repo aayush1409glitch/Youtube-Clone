@@ -2,7 +2,7 @@ import Razorpay from "razorpay";
 import crypto from "crypto";
 import users from "../Modals/Auth.js";
 import nodemailer from "nodemailer";
-import Channel from "../Modals/Channel.js";
+import Channel from "../Modals/channel.js";
 import dotenv from "dotenv";
 
 dotenv.config();

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import users from "../Modals/Auth.js";
-import Channel from "../Modals/Channel.js";
+import Channel from "../Modals/channel.js";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 
