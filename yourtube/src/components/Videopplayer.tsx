@@ -33,7 +33,7 @@ export default function Videopplayer({ video, nextVideoId }: VideoPlayerProps) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isBuffering, setIsBuffering] = useState(true);
+  const [isBuffering, setIsBuffering] = useState(false);
   const [showControls, setShowControls] = useState(true);
 
   // Auto-hide controls
@@ -52,7 +52,7 @@ export default function Videopplayer({ video, nextVideoId }: VideoPlayerProps) {
     if (videoRef.current) {
       videoRef.current.load();
       setIsPlaying(false);
-      setIsBuffering(true);
+      setIsBuffering(false);
       setCurrentTime(0);
     }
   }, [video?._id]);
