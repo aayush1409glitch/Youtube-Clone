@@ -1,0 +1,5 @@
+mongodb.zip
+mongodb_extracted/
+node_modules/
+.env
+.next/

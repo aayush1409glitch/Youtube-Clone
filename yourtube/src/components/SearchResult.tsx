@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import axiosInstance from "@/lib/axiosinstance";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,40 +15,20 @@ const SearchResult = ({ query }: any) => {
   }
   const [video, setvideos] = useState<any>(null);
   const videos = async () => {
-    const allVideos = [
-      {
-        _id: "1",
-        videotitle: "Amazing Nature Documentary",
-        filename: "nature-doc.mp4",
-        filetype: "video/mp4",
-        filepath: "/videos/nature-doc.mp4",
-        filesize: "500MB",
-        videochanel: "Nature Channel",
-        Like: 1250,
-        views: 45000,
-        uploader: "nature_lover",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        _id: "2",
-        videotitle: "Cooking Tutorial: Perfect Pasta",
-        filename: "pasta-tutorial.mp4",
-        filetype: "video/mp4",
-        filepath: "/videos/pasta-tutorial.mp4",
-        filesize: "300MB",
-        videochanel: "Chef's Kitchen",
-        Like: 890,
-        views: 23000,
-        uploader: "chef_master",
-        createdAt: new Date(Date.now() - 86400000).toISOString(),
-      },
-    ];
-    let results = allVideos.filter(
-      (vid) =>
-        vid.videotitle.toLowerCase().includes(query.toLowerCase()) ||
-        vid.videochanel.toLowerCase().includes(query.toLowerCase())
-    );
-    setvideos(results);
+    try {
+      const res = await axiosInstance.get("/video/getall");
+      const allVideos = res.data;
+      const queryWords = query.toLowerCase().split(/\s+/).filter((w: string) => w.length > 0);
+      let results = allVideos.filter((vid: any) => {
+        const title = (vid.videotitle || "").toLowerCase();
+        const channel = (vid.videochanel || "").toLowerCase();
+        return queryWords.every((word: string) => title.includes(word) || channel.includes(word));
+      });
+      setvideos(results);
+    } catch (error) {
+      console.log(error);
+      setvideos([]);
+    }
   };
   useEffect(() => {
     videos();
@@ -73,7 +54,6 @@ const SearchResult = ({ query }: any) => {
       </div>
     );
   }
-  const vids = "/video/vdo.mp4";
   return (
     <div className="space-y-6">
       {/* Video Results */}
@@ -82,9 +62,9 @@ const SearchResult = ({ query }: any) => {
           {video.map((video: any) => (
             <div key={video._id} className="flex gap-4 group">
               <Link href={`/watch/${video._id}`} className="flex-shrink-0">
-                <div className="relative w-80 aspect-video bg-gray-100 rounded-lg overflow-hidden">
+                <div className="relative w-80 aspect-video bg-gray-100 dark:bg-zinc-800 rounded-lg overflow-hidden">
                   <video
-                    src={vids}
+                    src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${video?.filepath}`}
                     className="object-cover group-hover:scale-105 transition-transform duration-200"
                   />
                   <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1 rounded">
@@ -123,7 +103,7 @@ const SearchResult = ({ query }: any) => {
                   </span>
                 </Link>
 
-                <p className="text-sm text-gray-700 line-clamp-2">
+                <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
                   Sample video description that would show search-relevant
                   content and help users understand what the video is about
                   before clicking.

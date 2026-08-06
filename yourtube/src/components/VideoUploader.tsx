@@ -7,7 +7,7 @@ import { Label } from "./ui/label";
 import { Progress } from "./ui/progress";
 import axiosInstance from "@/lib/axiosinstance";
 
-const VideoUploader = ({ channelId, channelName }: any) => {
+const VideoUploader = ({ channelId, channelName, onUploadSuccess }: any) => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -75,6 +75,9 @@ const VideoUploader = ({ channelId, channelName }: any) => {
       });
       toast.success("Upload successfully");
       resetForm();
+      if (onUploadSuccess) {
+        onUploadSuccess();
+      }
     } catch (error) {
       console.error("Error uploading video:", error);
       toast.error("There was an error uploading your video. Please try again.");
@@ -83,13 +86,13 @@ const VideoUploader = ({ channelId, channelName }: any) => {
     }
   };
   return (
-    <div className="bg-gray-50 rounded-lg p-6">
+    <div className="bg-gray-50 dark:bg-zinc-900/50 rounded-lg p-6">
       <h2 className="text-xl font-semibold mb-4">Upload a video</h2>
 
       <div className="space-y-4">
         {!videoFile ? (
           <div
-            className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:bg-gray-100 transition-colors"
+            className="border-2 border-dashed border-gray-300 dark:border-zinc-700 rounded-lg p-8 text-center cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
             onClick={() => fileInputRef.current?.click()}
           >
             <Upload className="w-12 h-12 mx-auto text-gray-400 mb-2" />
@@ -111,8 +114,8 @@ const VideoUploader = ({ channelId, channelName }: any) => {
             />
           </div>
         ) : (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
+          <div className="mt-4 space-y-4">
+            <div className="flex items-center gap-3 p-3 bg-card text-card-foreground rounded-lg border">
               <div className="bg-blue-100 p-2 rounded-md">
                 <FileVideo className="w-6 h-6 text-blue-600" />
               </div>

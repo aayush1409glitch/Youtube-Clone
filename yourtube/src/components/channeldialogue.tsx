@@ -16,12 +16,6 @@ import { useUser } from "@/lib/AuthContext";
 
 const Channeldialogue = ({ isopen, onclose, channeldata, mode }: any) => {
   const { user, login } = useUser();
-  // const user: any = {
-  //   id: "1",
-  //   name: "John Doe",
-  //   email: "john@example.com",
-  //   image: "https://github.com/shadcn.png?height=32&width=32",
-  // };
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
@@ -49,16 +43,21 @@ const Channeldialogue = ({ isopen, onclose, channeldata, mode }: any) => {
   };
   const handlesubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const payload = {
-      channelname: formData.name,
-      description: formData.description,
-    };
-    const response = await axiosInstance.patch(
-      `/user/update/${user._id}`,
-      payload
-    );
-    login(response?.data);
-    router.push(`/channel/${user?._id}`);
+    if (mode === "create") {
+      const payload = {
+        channelname: formData.name,
+        description: formData.description,
+        owner: user._id,
+        avatar: user.image || "/placeholder.svg?height=32&width=32"
+      };
+      await axiosInstance.post("/channel/create", payload);
+    } else {
+      // Logic for editing channel could go here
+    }
+    
+    // Reload channels in context
+    await login(user);
+    
     setFormData({
       name: "",
       description: "",

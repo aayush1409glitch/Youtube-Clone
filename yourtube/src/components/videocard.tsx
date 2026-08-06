@@ -8,10 +8,12 @@ export default function VideoCard({ video }: any) {
   return (
     <Link href={`/watch/${video?._id}`} className="group">
       <div className="space-y-3">
-        <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
+        <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-zinc-800">
           <video
-            src={`${process.env.BACKEND_URL}/${video?.filepath}`}
-            className="object-cover group-hover:scale-105 transition-transform duration-200"
+            src={video?.filepath?.startsWith("http") ? video?.filepath : `${process.env.NEXT_PUBLIC_BACKEND_URL}/${video?.filepath}`}
+            poster={`https://picsum.photos/seed/${video?._id}/640/360`}
+            className="object-cover group-hover:scale-105 transition-transform duration-200 pointer-events-none"
+            muted
           />
           <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1 rounded">
             10:24

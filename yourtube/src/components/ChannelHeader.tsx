@@ -2,8 +2,39 @@ import React, { useState } from "react";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
 
+import axiosInstance from "@/lib/axiosinstance";
+import { useUser } from "@/lib/AuthContext";
+
 const ChannelHeader = ({ channel, user }: any) => {
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const { login } = useUser();
+
+  React.useEffect(() => {
+    if (user && user.subscriptions && channel) {
+      const subbed = user.subscriptions.some(
+        (sub: any) => sub.uploaderId === channel.owner
+      );
+      setIsSubscribed(subbed);
+    }
+  }, [user, channel]);
+
+  const handleSubscribe = async () => {
+    if (!user) return;
+    try {
+      const res = await axiosInstance.post(`/user/subscribe`, {
+        userId: user._id,
+        channelName: channel.channelname,
+        uploaderId: channel.owner,
+        avatar: channel.avatar || channel.channelname[0]
+      });
+      if (res.data) {
+        login(res.data);
+      }
+    } catch (error) {
+      console.log("Error subscribing:", error);
+    }
+  };
+
   return (
     <div className="w-full">
       {/* Banner */}
@@ -24,7 +55,7 @@ const ChannelHeader = ({ channel, user }: any) => {
               <span>@{channel?.channelname.toLowerCase().replace(/\s+/g, "")}</span>
             </div>
             {channel?.description && (
-              <p className="text-sm text-gray-700 max-w-2xl">
+              <p className="text-sm text-gray-700 dark:text-gray-300 max-w-2xl">
                 {channel?.description}
               </p>
             )}
@@ -33,10 +64,10 @@ const ChannelHeader = ({ channel, user }: any) => {
           {user && user?._id !== channel?._id && (
             <div className="flex gap-2">
               <Button
-                onClick={() => setIsSubscribed(!isSubscribed)}
+                onClick={handleSubscribe}
                 variant={isSubscribed ? "outline" : "default"}
                 className={
-                  isSubscribed ? "bg-gray-100" : "bg-red-600 hover:bg-red-700"
+                  isSubscribed ? "bg-gray-100 dark:bg-zinc-800 dark:text-zinc-200" : "bg-red-600 hover:bg-red-700 text-white"
                 }
               >
                 {isSubscribed ? "Subscribed" : "Subscribe"}

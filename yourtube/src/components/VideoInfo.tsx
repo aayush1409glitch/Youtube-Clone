@@ -8,32 +8,40 @@ import {
   Share,
   ThumbsDown,
   ThumbsUp,
+  Users,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useUser } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
+import { useRouter } from "next/router";
+import { toast } from "sonner";
 
 const VideoInfo = ({ video }: any) => {
+  const router = useRouter();
   const [likes, setlikes] = useState(video.Like || 0);
   const [dislikes, setDislikes] = useState(video.Dislike || 0);
   const [isLiked, setIsLiked] = useState(false);
   const [isDisliked, setIsDisliked] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
-  const { user } = useUser();
+  const { user, login, activeChannel } = useUser();
   const [isWatchLater, setIsWatchLater] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
 
-  // const user: any = {
-  //   id: "1",
-  //   name: "John Doe",
-  //   email: "john@example.com",
-  //   image: "https://github.com/shadcn.png?height=32&width=32",
-  // };
   useEffect(() => {
     setlikes(video.Like || 0);
     setDislikes(video.Dislike || 0);
     setIsLiked(false);
     setIsDisliked(false);
   }, [video]);
+
+  useEffect(() => {
+    if (user && user.subscriptions) {
+      const subbed = user.subscriptions.some(
+        (sub: any) => sub.channelName === video.videochanel || sub.uploaderId === video.uploader
+      );
+      setIsSubscribed(subbed);
+    }
+  }, [user, video]);
 
   useEffect(() => {
     const handleviews = async () => {
@@ -51,6 +59,65 @@ const VideoInfo = ({ video }: any) => {
     };
     handleviews();
   }, [user]);
+
+  const handleSubscribe = async () => {
+    if (!user) {
+      alert("Please log in to subscribe");
+      return;
+    }
+    try {
+      const res = await axiosInstance.post(`/user/subscribe`, {
+        userId: user._id,
+        channelName: video.videochanel,
+        uploaderId: video.uploader || "unknown",
+        avatar: video.videochanel[0]
+      });
+      // The backend returns the updated user object
+      if (res.data) {
+        login(res.data); // Update AuthContext
+      }
+    } catch (error) {
+      console.log("Error subscribing:", error);
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!user) {
+      alert("Please log in to download videos");
+      return;
+    }
+    if (!activeChannel) {
+      toast.error("Please create or select a channel to download videos!");
+      return;
+    }
+    try {
+      const videoUrl = video.filepath.startsWith("http") 
+        ? video.filepath.replace("commondatastorage.googleapis.com", "storage.googleapis.com").replace("http://", "https://") 
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000"}/${video.filepath}`;
+      
+      const res = await axiosInstance.post(`/user/download`, {
+        channelId: activeChannel._id,
+        videoId: video._id,
+        videoTitle: video.videotitle,
+        videoUrl: videoUrl
+      });
+      
+      if (res.data) {
+        login(user); // Reload user and channels
+        
+        // Show success popup instead of forcing a physical file download
+        toast.success("Video downloaded and is available in your downloads section");
+      }
+    } catch (error: any) {
+      if (error.response && error.response.status === 403) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Failed to download video. Please try again later.");
+        console.log("Error downloading:", error);
+      }
+    }
+  };
+
   const handleLike = async () => {
     if (!user) return;
     try {
@@ -112,45 +179,50 @@ const VideoInfo = ({ video }: any) => {
     }
   };
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold">{video.videotitle}</h1>
+    <div className="space-y-3">
+      <h1 className="text-lg font-medium">{video.videotitle}</h1>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+        <div className="flex items-center gap-4 shrink-0">
           <Avatar className="w-10 h-10">
             <AvatarFallback>{video.videochanel[0]}</AvatarFallback>
           </Avatar>
-          <div>
+          <div className="whitespace-nowrap">
             <h3 className="font-medium">{video.videochanel}</h3>
-            <p className="text-sm text-gray-600">1.2M subscribers</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">1.2M subscribers</p>
           </div>
-          <Button className="ml-4">Subscribe</Button>
+          <Button 
+            className={`ml-2 shrink-0 ${isSubscribed ? 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700' : 'bg-red-600 hover:bg-red-700 text-white'}`}
+            onClick={handleSubscribe}
+          >
+            {isSubscribed ? "Subscribed" : "Subscribe"}
+          </Button>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center bg-gray-100 rounded-full">
+        <div className="flex flex-wrap items-center gap-2 w-full mt-3 lg:mt-0">
+          <div className="flex items-center bg-gray-100 dark:bg-zinc-800 dark:text-zinc-200 rounded-full">
             <Button
               variant="ghost"
               size="sm"
-              className="rounded-l-full"
+              className="rounded-l-full hover:bg-gray-200 dark:hover:bg-zinc-700"
               onClick={handleLike}
             >
               <ThumbsUp
                 className={`w-5 h-5 mr-2 ${
-                  isLiked ? "fill-black text-black" : ""
+                  isLiked ? "fill-black text-black dark:fill-white dark:text-white" : ""
                 }`}
               />
               {likes.toLocaleString()}
             </Button>
-            <div className="w-px h-6 bg-gray-300" />
+            <div className="w-px h-6 bg-gray-300 dark:bg-zinc-700" />
             <Button
               variant="ghost"
               size="sm"
-              className="rounded-r-full"
+              className="rounded-r-full hover:bg-gray-200 dark:hover:bg-zinc-700"
               onClick={handleDislike}
             >
               <ThumbsDown
                 className={`w-5 h-5 mr-2 ${
-                  isDisliked ? "fill-black text-black" : ""
+                  isDisliked ? "fill-black text-black dark:fill-white dark:text-white" : ""
                 }`}
               />
               {dislikes.toLocaleString()}
@@ -159,7 +231,7 @@ const VideoInfo = ({ video }: any) => {
           <Button
             variant="ghost"
             size="sm"
-            className={`bg-gray-100 rounded-full ${
+            className={`bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 rounded-full ${
               isWatchLater ? "text-primary" : ""
             }`}
             onClick={handleWatchLater}
@@ -170,7 +242,19 @@ const VideoInfo = ({ video }: any) => {
           <Button
             variant="ghost"
             size="sm"
-            className="bg-gray-100 rounded-full"
+            className="bg-blue-100 hover:bg-blue-200 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 dark:hover:bg-blue-900/60 rounded-full"
+            onClick={() => {
+              const roomId = Math.random().toString(36).substring(2, 10);
+              router.push(`/watch-party/${roomId}?videoId=${video._id}`);
+            }}
+          >
+            <Users className="w-5 h-5 mr-2" />
+            Watch Party
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 rounded-full"
           >
             <Share className="w-5 h-5 mr-2" />
             Share
@@ -178,7 +262,8 @@ const VideoInfo = ({ video }: any) => {
           <Button
             variant="ghost"
             size="sm"
-            className="bg-gray-100 rounded-full"
+            className="bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 rounded-full"
+            onClick={handleDownload}
           >
             <Download className="w-5 h-5 mr-2" />
             Download
@@ -186,13 +271,13 @@ const VideoInfo = ({ video }: any) => {
           <Button
             variant="ghost"
             size="icon"
-            className="bg-gray-100 rounded-full"
+            className="bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 rounded-full"
           >
             <MoreHorizontal className="w-5 h-5" />
           </Button>
         </div>
       </div>
-      <div className="bg-gray-100 rounded-lg p-4">
+      <div className="bg-gray-100 dark:bg-zinc-800 dark:text-zinc-200 rounded-lg p-4">
         <div className="flex gap-4 text-sm font-medium mb-2">
           <span>{video.views.toLocaleString()} views</span>
           <span>{formatDistanceToNow(new Date(video.createdAt))} ago</span>

@@ -3,7 +3,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
 import { formatDistanceToNow } from "date-fns";
+import { ThumbsUp, ThumbsDown, Flag, MapPin, Languages, AlertTriangle } from "lucide-react";
 import { useUser } from "@/lib/AuthContext";
+import { toast } from "sonner";
 import axiosInstance from "@/lib/axiosinstance";
 interface Comment {
   _id: string;
@@ -12,33 +14,53 @@ interface Comment {
   commentbody: string;
   usercommented: string;
   commentedon: string;
+  location?: string;
+  likes?: string[];
+  dislikes?: string[];
+  reports?: string[];
+  isFlagged?: boolean;
+  translatedBody?: string;
+  targetLang?: string;
 }
+
+const LANGUAGES = [
+  { code: 'en', name: 'English' },
+  { code: 'es', name: 'Spanish' },
+  { code: 'hi', name: 'Hindi' },
+  { code: 'fr', name: 'French' },
+  { code: 'de', name: 'German' },
+  { code: 'ja', name: 'Japanese' },
+  { code: 'ar', name: 'Arabic' }
+];
+
 const Comments = ({ videoId }: any) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
-  const { user } = useUser();
+  const { user, otpData } = useUser();
   const [loading, setLoading] = useState(true);
-  const fetchedComments = [
-    {
-      _id: "1",
-      videoid: videoId,
-      userid: "1",
-      commentbody: "Great video! Really enjoyed watching this.",
-      usercommented: "John Doe",
-      commentedon: new Date(Date.now() - 3600000).toISOString(),
-    },
-    {
-      _id: "2",
-      videoid: videoId,
-      userid: "2",
-      commentbody: "Thanks for sharing this amazing content!",
-      usercommented: "Jane Smith",
-      commentedon: new Date(Date.now() - 7200000).toISOString(),
-    },
-  ];
+  const [includeLocation, setIncludeLocation] = useState(false);
+  const [translatingId, setTranslatingId] = useState<string | null>(null);
+  const [activeLangDropdown, setActiveLangDropdown] = useState<string | null>(null);
+  const [userLocation, setUserLocation] = useState<string | null>(otpData?.locationString || null);
+
+  const fetchUserLocation = async () => {
+    if (userLocation) return;
+    try {
+      const res = await fetch('http://ip-api.com/json/');
+      const data = await res.json();
+      if (data.status === 'success') {
+        setUserLocation(`${data.city}, ${data.regionName}`);
+      } else {
+        setUserLocation('Unknown Location');
+      }
+    } catch (err) {
+      setUserLocation('Unknown Location');
+    }
+  };
+
   useEffect(() => {
     loadComments();
   }, [videoId]);
@@ -66,24 +88,72 @@ const Comments = ({ videoId }: any) => {
         userid: user._id,
         commentbody: newComment,
         usercommented: user.name,
+        location: includeLocation && userLocation ? userLocation : undefined
       });
-      if (res.data.comment) {
-        const newCommentObj: Comment = {
-          _id: Date.now().toString(),
-          videoid: videoId,
-          userid: user._id,
-          commentbody: newComment,
-          usercommented: user.name || "Anonymous",
-          commentedon: new Date().toISOString(),
-        };
+      if (res.data.comment && res.data.data) {
+        const newCommentObj: Comment = res.data.data;
         setComments([newCommentObj, ...comments]);
+        toast.success("Comment posted successfully");
       }
       setNewComment("");
-    } catch (error) {
+      setIncludeLocation(false);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Error adding comment");
       console.error("Error adding comment:", error);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleLike = async (commentId: string) => {
+    if (!user) return toast.error("Please login to like comments");
+    try {
+      const res = await axiosInstance.post(`/comment/like/${commentId}`, { userId: user._id });
+      setComments(comments.map(c => c._id === commentId ? { ...c, likes: res.data.likes, dislikes: res.data.dislikes } : c));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDislike = async (commentId: string) => {
+    if (!user) return toast.error("Please login to dislike comments");
+    try {
+      const res = await axiosInstance.post(`/comment/dislike/${commentId}`, { userId: user._id });
+      setComments(comments.map(c => c._id === commentId ? { ...c, likes: res.data.likes, dislikes: res.data.dislikes } : c));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleReport = async (commentId: string) => {
+    if (!user) return toast.error("Please login to report comments");
+    try {
+      const res = await axiosInstance.post(`/comment/report/${commentId}`, { userId: user._id });
+      setComments(comments.map(c => c._id === commentId ? { ...c, isFlagged: res.data.isFlagged, reports: res.data.reports } : c));
+      toast.success("Comment reported and flagged for review");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleTranslate = async (comment: Comment, langCode: string) => {
+    setTranslatingId(comment._id);
+    setActiveLangDropdown(null);
+    try {
+      const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${langCode}&dt=t&q=${encodeURIComponent(comment.commentbody)}`);
+      const data = await res.json();
+      const translatedText = data[0].map((item: any) => item[0]).join('');
+      setComments(comments.map(c => c._id === comment._id ? { ...c, translatedBody: translatedText, targetLang: langCode } : c));
+    } catch (err) {
+      toast.error("Translation failed");
+      console.error(err);
+    } finally {
+      setTranslatingId(null);
+    }
+  };
+
+  const revertTranslation = (commentId: string) => {
+    setComments(comments.map(c => c._id === commentId ? { ...c, translatedBody: undefined, targetLang: undefined } : c));
   };
 
   const handleEdit = (comment: Comment) => {
@@ -139,20 +209,42 @@ const Comments = ({ videoId }: any) => {
               onChange={(e: any) => setNewComment(e.target.value)}
               className="min-h-[80px] resize-none border-0 border-b-2 rounded-none focus-visible:ring-0"
             />
-            <div className="flex gap-2 justify-end">
-              <Button
-                variant="ghost"
-                onClick={() => setNewComment("")}
-                disabled={!newComment.trim()}
-              >
-                Cancel
-              </Button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center mt-2">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="includeLocation"
+                  checked={includeLocation}
+                  onChange={(e) => {
+                    setIncludeLocation(e.target.checked);
+                    if (e.target.checked && !userLocation) {
+                      fetchUserLocation();
+                    }
+                  }}
+                  className="rounded text-primary focus:ring-primary"
+                />
+                <label htmlFor="includeLocation" className="text-sm flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                  <MapPin className="w-4 h-4" /> Include my location {userLocation ? `(${userLocation})` : includeLocation ? "(Detecting...)" : ""}
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setNewComment("");
+                    setIncludeLocation(false);
+                  }}
+                  disabled={!newComment.trim()}
+                >
+                  Cancel
+                </Button>
               <Button
                 onClick={handleSubmitComment}
                 disabled={!newComment.trim() || isSubmitting}
               >
                 Comment
               </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -174,13 +266,18 @@ const Comments = ({ videoId }: any) => {
                   <span className="font-medium text-sm">
                     {comment.usercommented}
                   </span>
-                  <span className="text-xs text-gray-600">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">
                     {formatDistanceToNow(new Date(comment.commentedon))} ago
                   </span>
+                  {comment.location && (
+                    <span className="text-xs text-gray-500 dark:text-gray-500 flex items-center gap-1">
+                      • <MapPin className="w-3 h-3" /> {comment.location}
+                    </span>
+                  )}
                 </div>
 
                 {editingCommentId === comment._id ? (
-                  <div className="space-y-2">
+                  <div className="space-y-2 mt-2">
                     <Textarea
                       value={editText}
                       onChange={(e) => setEditText(e.target.value)}
@@ -205,16 +302,75 @@ const Comments = ({ videoId }: any) => {
                   </div>
                 ) : (
                   <>
-                    <p className="text-sm">{comment.commentbody}</p>
-                    {comment.userid === user?._id && (
-                      <div className="flex gap-2 mt-2 text-sm text-gray-500">
-                        <button onClick={() => handleEdit(comment)}>
-                          Edit
-                        </button>
-                        <button onClick={() => handleDelete(comment._id)}>
-                          Delete
-                        </button>
+                    {comment.isFlagged ? (
+                      <div className="mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900 rounded-md flex items-start gap-2">
+                        <AlertTriangle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-medium text-yellow-800 dark:text-yellow-500">Flagged for review</p>
+                          <p className="text-xs text-yellow-700 dark:text-yellow-600">This comment has been reported and is awaiting review.</p>
+                        </div>
                       </div>
+                    ) : (
+                      <>
+                        <p className="text-sm mt-1">{comment.translatedBody || comment.commentbody}</p>
+                        
+                        <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
+                          <button onClick={() => handleLike(comment._id)} className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-gray-200">
+                            <ThumbsUp className={`w-4 h-4 ${comment.likes?.includes(user?._id) ? "fill-current" : ""}`} />
+                            <span>{comment.likes?.length || 0}</span>
+                          </button>
+                          <button onClick={() => handleDislike(comment._id)} className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-gray-200">
+                            <ThumbsDown className={`w-4 h-4 ${comment.dislikes?.includes(user?._id) ? "fill-current" : ""}`} />
+                            <span>{comment.dislikes?.length || 0}</span>
+                          </button>
+                          
+                          <div className="relative">
+                            {comment.translatedBody ? (
+                              <button 
+                                onClick={() => revertTranslation(comment._id)} 
+                                className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-gray-200 text-primary"
+                              >
+                                <Languages className="w-4 h-4" />
+                                <span>Show Original</span>
+                              </button>
+                            ) : (
+                              <button 
+                                onClick={() => setActiveLangDropdown(activeLangDropdown === comment._id ? null : comment._id)} 
+                                disabled={translatingId === comment._id}
+                                className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-gray-200"
+                              >
+                                <Languages className="w-4 h-4" />
+                                <span>{translatingId === comment._id ? "Translating..." : "Translate"}</span>
+                              </button>
+                            )}
+
+                            {activeLangDropdown === comment._id && !comment.translatedBody && (
+                              <div className="absolute left-0 mt-2 w-32 bg-white dark:bg-zinc-800 border dark:border-zinc-700 rounded-md shadow-lg z-10 py-1">
+                                {LANGUAGES.map((lang) => (
+                                  <button
+                                    key={lang.code}
+                                    onClick={() => handleTranslate(comment, lang.code)}
+                                    className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-zinc-700"
+                                  >
+                                    {lang.name}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {comment.userid === user?._id ? (
+                            <>
+                              <button onClick={() => handleEdit(comment)} className="hover:text-gray-900 dark:hover:text-gray-200">Edit</button>
+                              <button onClick={() => handleDelete(comment._id)} className="hover:text-gray-900 dark:hover:text-gray-200">Delete</button>
+                            </>
+                          ) : (
+                            <button onClick={() => handleReport(comment._id)} className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-gray-200 ml-auto">
+                              <Flag className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </>
                     )}
                   </>
                 )}

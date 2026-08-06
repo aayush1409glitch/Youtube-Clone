@@ -9,9 +9,9 @@ interface RelatedVideosProps {
     videochanel: string;
     views: number;
     createdAt: string;
+    filepath?: string;
   }>;
 }
-const vid = "/video/vdo.mp4";
 export default function RelatedVideos({ videos }: RelatedVideosProps) {
   return (
     <div className="space-y-2">
@@ -21,10 +21,12 @@ export default function RelatedVideos({ videos }: RelatedVideosProps) {
           href={`/watch/${video._id}`}
           className="flex gap-2 group"
         >
-          <div className="relative w-40 aspect-video bg-gray-100 rounded overflow-hidden flex-shrink-0">
+          <div className="relative w-40 aspect-video bg-gray-100 dark:bg-zinc-800 rounded overflow-hidden flex-shrink-0">
             <video
-              src={vid}
-              className="object-cover group-hover:scale-105 transition-transform duration-200"
+              src={video?.filepath?.startsWith("http") ? video?.filepath : `${process.env.NEXT_PUBLIC_BACKEND_URL}/${video?.filepath}`}
+              poster={`https://picsum.photos/seed/${video?._id}/640/360`}
+              className="object-cover group-hover:scale-105 transition-transform duration-200 pointer-events-none"
+              muted
             />
           </div>
           <div className="flex-1 min-w-0">

@@ -87,12 +87,13 @@ export default function WatchLaterContent() {
       </div>
 
       <div className="space-y-4">
-        {watchLater.map((item) => (
+        {watchLater.filter(item => item.videoid != null).map((item) => (
           <div key={item._id} className="flex gap-4 group">
             <Link href={`/watch/${item.videoid._id}`} className="flex-shrink-0">
-              <div className="relative w-40 aspect-video bg-gray-100 rounded overflow-hidden">
+              <div className="relative w-40 aspect-video bg-gray-100 dark:bg-zinc-800 rounded overflow-hidden">
                 <video
-                  src={`${process.env.BACKEND_URL}/${item.videoid?.filepath}`}
+                  src={item.videoid?.filepath?.startsWith("http") ? item.videoid.filepath : `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.videoid?.filepath}`}
+                  poster={`https://picsum.photos/seed/${item.videoid?._id}/640/360`}
                   className="object-cover group-hover:scale-105 transition-transform duration-200"
                 />
               </div>
