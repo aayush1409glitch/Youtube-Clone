@@ -1,9 +1,10 @@
 import express from "express";
-import { getallvideo, uploadvideo } from "../controllers/video.js";
+import { getallvideo, uploadvideo, seedvideo } from "../controllers/video.js";
 import upload from "../filehelper/filehelper.js";
 
 const routes = express.Router();
 
+routes.get("/seed", seedvideo);
 routes.post("/upload", upload.single("file"), uploadvideo);
 routes.get("/getall", getallvideo);
 routes.get("/:id", async (req, res) => {

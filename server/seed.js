@@ -3,7 +3,7 @@ import video from "./Modals/video.js";
 
 const seedDB = async () => {
   try {
-    await mongoose.connect("mongodb://127.0.0.1:27017/yourtube");
+    await mongoose.connect(process.env.DB_URL || "mongodb://127.0.0.1:27017/yourtube");
     
     // Clear everything
     await video.deleteMany({});
