@@ -20,13 +20,13 @@ export const login = async (req, res) => {
   try {
     const existingUser = await users.findOne({ email });
 
-    // Calculate time-based theme
-    const now = new Date();
-    // Convert to IST (UTC+5:30)
-    const istOffset = 5.5 * 60 * 60 * 1000;
-    const istTime = new Date(now.getTime() + istOffset);
-    const hours = istTime.getUTCHours();
-    // 10 AM to 12 PM IST
+    // Calculate time-based theme for IST (10 AM to 12 PM IST = light, all other times = dark)
+    const istHourStr = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Kolkata",
+      hour: "numeric",
+      hour12: false
+    }).format(new Date());
+    const hours = parseInt(istHourStr, 10);
     const theme = (hours >= 10 && hours < 12) ? "light" : "dark";
 
     // Get client location
