@@ -93,9 +93,12 @@ const PremiumPage = () => {
             });
 
             if (verifyRes.data.success) {
-              login(user); // Reload user and channels
+              const updatedUser = verifyRes.data.user;
+              if (updatedUser) {
+                setUser(updatedUser);
+                localStorage.setItem("user", JSON.stringify(updatedUser));
+              }
               toast.success(`Welcome to ${plan.name.toUpperCase()}! Check your email for the invoice.`);
-              router.push("/");
             }
           } catch (error) {
             console.error("Verification error:", error);
@@ -170,7 +173,7 @@ const PremiumPage = () => {
                 ))}
               </ul>
 
-              {user?.plan === plan.name || activeChannel?.plan === plan.name ? (
+              {user?.plan?.toLowerCase() === plan.name.toLowerCase() || activeChannel?.plan?.toLowerCase() === plan.name.toLowerCase() ? (
                 <Button className="w-full text-lg py-6 bg-gray-200 text-gray-700 dark:bg-zinc-800 dark:text-gray-400 cursor-not-allowed" disabled>
                   Current Plan
                 </Button>
