@@ -59,56 +59,86 @@ export const verifyPayment = async (req, res) => {
       return res.status(400).json({ message: "Invalid payment signature" });
     }
 
-    if (!channelId) {
-      return res.status(400).json({ message: "Channel ID is required for upgrade" });
+    let updatedChannel = null;
+    if (channelId) {
+      const channel = await Channel.findById(channelId);
+      if (channel) {
+        channel.plan = plan;
+        updatedChannel = await channel.save();
+      }
     }
-
-    const channel = await Channel.findById(channelId);
-    if (!channel) {
-      return res.status(404).json({ message: "Channel not found" });
-    }
-
-    channel.plan = plan;
-    const updatedChannel = await channel.save();
 
     const user = await users.findById(userId);
+    if (user) {
+      user.plan = plan;
+      await user.save();
+    }
 
-    if (user.email && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-      const mailOptions = {
-        from: `"YourTube Premium" <${process.env.EMAIL_USER}>`,
-        to: user.email,
-        subject: "YourTube Subscription Invoice",
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-            <h2 style="color: #eab308; text-align: center;">Welcome to YourTube ${plan.charAt(0).toUpperCase() + plan.slice(1)}!</h2>
-            <p>Hi ${user.name || "User"},</p>
-            <p>Thank you for upgrading your subscription! Your payment was successful.</p>
-            <div style="background-color: #f9f9f9; padding: 15px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="margin-top: 0;">Invoice Details</h3>
-              <p><strong>Plan:</strong> ${plan.toUpperCase()}</p>
-              <p><strong>Amount Paid:</strong> ₹${amount}</p>
-              <p><strong>Transaction ID:</strong> ${razorpay_payment_id}</p>
-              <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+    if (user && user.email) {
+      if (process.env.BREVO_API_KEY) {
+        fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: {
+            'accept': 'application/json',
+            'api-key': process.env.BREVO_API_KEY,
+            'content-type': 'application/json'
+          },
+          body: JSON.stringify({
+            sender: { name: 'YourTube Premium', email: process.env.EMAIL_USER || 'majorghost111@gmail.com' },
+            to: [{ email: user.email }],
+            subject: "YourTube Subscription Invoice",
+            htmlContent: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+                <h2 style="color: #eab308; text-align: center;">Welcome to YourTube ${plan.charAt(0).toUpperCase() + plan.slice(1)}!</h2>
+                <p>Hi ${user.name || "User"},</p>
+                <p>Thank you for upgrading your subscription! Your payment was successful.</p>
+                <div style="background-color: #f9f9f9; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                  <h3 style="margin-top: 0;">Invoice Details</h3>
+                  <p><strong>Plan:</strong> ${plan.toUpperCase()}</p>
+                  <p><strong>Amount Paid:</strong> ₹${amount}</p>
+                  <p><strong>Transaction ID:</strong> ${razorpay_payment_id}</p>
+                  <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+                </div>
+                <p>You can now enjoy your premium perks immediately.</p>
+                <p>Best Regards,<br>The YourTube Team</p>
+              </div>
+            `
+          })
+        }).catch(console.error);
+      } else if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        const mailOptions = {
+          from: `"YourTube Premium" <${process.env.EMAIL_USER}>`,
+          to: user.email,
+          subject: "YourTube Subscription Invoice",
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+              <h2 style="color: #eab308; text-align: center;">Welcome to YourTube ${plan.charAt(0).toUpperCase() + plan.slice(1)}!</h2>
+              <p>Hi ${user.name || "User"},</p>
+              <p>Thank you for upgrading your subscription! Your payment was successful.</p>
+              <div style="background-color: #f9f9f9; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="margin-top: 0;">Invoice Details</h3>
+                <p><strong>Plan:</strong> ${plan.toUpperCase()}</p>
+                <p><strong>Amount Paid:</strong> ₹${amount}</p>
+                <p><strong>Transaction ID:</strong> ${razorpay_payment_id}</p>
+                <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+              </div>
+              <p>You can now enjoy your premium perks immediately.</p>
+              <p>Best Regards,<br>The YourTube Team</p>
             </div>
-            <p>You can now enjoy your premium perks immediately.</p>
-            <p>Best Regards,<br>The YourTube Team</p>
-          </div>
-        `,
-      };
+          `,
+        };
 
-      transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          console.error("Email error:", error);
-        } else {
-          console.log("Invoice email sent:", info.response);
-        }
-      });
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) console.error("Email error:", error);
+        });
+      }
     }
 
     res.status(200).json({
       success: true,
       message: "Payment verified successfully",
       channel: updatedChannel,
+      user,
     });
   } catch (error) {
     console.error("Verify payment error:", error);
