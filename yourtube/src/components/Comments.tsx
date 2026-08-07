@@ -302,76 +302,79 @@ const Comments = ({ videoId }: any) => {
                   </div>
                 ) : (
                   <>
-                    {comment.isFlagged ? (
-                      <div className="mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900 rounded-md flex items-start gap-2">
-                        <AlertTriangle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-sm font-medium text-yellow-800 dark:text-yellow-500">Flagged for review</p>
-                          <p className="text-xs text-yellow-700 dark:text-yellow-600">This comment has been reported and is awaiting review.</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <p className="text-sm mt-1">{comment.translatedBody || comment.commentbody}</p>
-                        
-                        <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
-                          <button onClick={() => handleLike(comment._id)} className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-gray-200">
-                            <ThumbsUp className={`w-4 h-4 ${comment.likes?.includes(user?._id) ? "fill-current" : ""}`} />
-                            <span>{comment.likes?.length || 0}</span>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium">{comment.usercommented}</p>
+                      <span className="text-xs text-gray-500">{formatDistanceToNow(new Date(comment.commentedon))} ago</span>
+                      {comment.isFlagged && (
+                        <span className="px-2 py-0.5 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border border-yellow-500/30 rounded text-[11px] font-semibold flex items-center gap-1">
+                          <AlertTriangle className="w-3 h-3" /> Flagged for Review
+                        </span>
+                      )}
+                    </div>
+                    
+                    <p className="text-sm mt-1">{comment.translatedBody || comment.commentbody}</p>
+                    
+                    <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
+                      <button onClick={() => handleLike(comment._id)} className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-gray-200">
+                        <ThumbsUp className={`w-4 h-4 ${comment.likes?.includes(user?._id) ? "fill-current text-blue-600" : ""}`} />
+                        <span>{comment.likes?.length || 0}</span>
+                      </button>
+                      <button onClick={() => handleDislike(comment._id)} className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-gray-200">
+                        <ThumbsDown className={`w-4 h-4 ${comment.dislikes?.includes(user?._id) ? "fill-current text-red-600" : ""}`} />
+                        <span>{comment.dislikes?.length || 0}</span>
+                      </button>
+                      
+                      <div className="relative">
+                        {comment.translatedBody ? (
+                          <button 
+                            onClick={() => revertTranslation(comment._id)} 
+                            className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-gray-200 text-primary font-medium"
+                          >
+                            <Languages className="w-4 h-4" />
+                            <span>Show Original</span>
                           </button>
-                          <button onClick={() => handleDislike(comment._id)} className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-gray-200">
-                            <ThumbsDown className={`w-4 h-4 ${comment.dislikes?.includes(user?._id) ? "fill-current" : ""}`} />
-                            <span>{comment.dislikes?.length || 0}</span>
+                        ) : (
+                          <button 
+                            onClick={() => setActiveLangDropdown(activeLangDropdown === comment._id ? null : comment._id)} 
+                            disabled={translatingId === comment._id}
+                            className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-gray-200"
+                          >
+                            <Languages className="w-4 h-4" />
+                            <span>{translatingId === comment._id ? "Translating..." : "Translate"}</span>
                           </button>
-                          
-                          <div className="relative">
-                            {comment.translatedBody ? (
-                              <button 
-                                onClick={() => revertTranslation(comment._id)} 
-                                className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-gray-200 text-primary"
-                              >
-                                <Languages className="w-4 h-4" />
-                                <span>Show Original</span>
-                              </button>
-                            ) : (
-                              <button 
-                                onClick={() => setActiveLangDropdown(activeLangDropdown === comment._id ? null : comment._id)} 
-                                disabled={translatingId === comment._id}
-                                className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-gray-200"
-                              >
-                                <Languages className="w-4 h-4" />
-                                <span>{translatingId === comment._id ? "Translating..." : "Translate"}</span>
-                              </button>
-                            )}
+                        )}
 
-                            {activeLangDropdown === comment._id && !comment.translatedBody && (
-                              <div className="absolute left-0 mt-2 w-32 bg-white dark:bg-zinc-800 border dark:border-zinc-700 rounded-md shadow-lg z-10 py-1">
-                                {LANGUAGES.map((lang) => (
-                                  <button
-                                    key={lang.code}
-                                    onClick={() => handleTranslate(comment, lang.code)}
-                                    className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-zinc-700"
-                                  >
-                                    {lang.name}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
+                        {activeLangDropdown === comment._id && !comment.translatedBody && (
+                          <div className="absolute left-0 mt-2 w-32 bg-white dark:bg-zinc-800 border dark:border-zinc-700 rounded-md shadow-lg z-10 py-1">
+                            {LANGUAGES.map((lang) => (
+                              <button
+                                key={lang.code}
+                                onClick={() => handleTranslate(comment, lang.code)}
+                                className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-zinc-700"
+                              >
+                                {lang.name}
+                              </button>
+                            ))}
                           </div>
+                        )}
+                      </div>
 
-                          {comment.userid === user?._id ? (
-                            <>
-                              <button onClick={() => handleEdit(comment)} className="hover:text-gray-900 dark:hover:text-gray-200">Edit</button>
-                              <button onClick={() => handleDelete(comment._id)} className="hover:text-gray-900 dark:hover:text-gray-200">Delete</button>
-                            </>
-                          ) : (
-                            <button onClick={() => handleReport(comment._id)} className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-gray-200 ml-auto">
-                              <Flag className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                      </>
-                    )}
+                      {comment.userid === user?._id && (
+                        <>
+                          <button onClick={() => handleEdit(comment)} className="hover:text-gray-900 dark:hover:text-gray-200">Edit</button>
+                          <button onClick={() => handleDelete(comment._id)} className="hover:text-gray-900 dark:hover:text-gray-200">Delete</button>
+                        </>
+                      )}
+
+                      <button 
+                        onClick={() => handleReport(comment._id)} 
+                        className={`flex items-center gap-1 hover:text-red-600 transition-colors ${comment.reports?.includes(user?._id) ? "text-red-500 font-semibold" : ""}`}
+                        title="Report comment"
+                      >
+                        <Flag className="w-3.5 h-3.5" />
+                        <span>{comment.reports?.includes(user?._id) ? "Reported" : "Report"}</span>
+                      </button>
+                    </div>
                   </>
                 )}
               </div>
