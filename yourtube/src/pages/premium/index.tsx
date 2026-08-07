@@ -61,11 +61,6 @@ const PremiumPage = () => {
       return;
     }
 
-    if (!activeChannel) {
-      toast.error("Please create or select a channel first to upgrade it!");
-      return;
-    }
-
     setLoadingPlan(plan.name);
     try {
       // 1. Create order on backend
@@ -82,7 +77,7 @@ const PremiumPage = () => {
         amount: order.amount,
         currency: order.currency,
         name: "YourTube",
-        description: `${plan.name.charAt(0).toUpperCase() + plan.name.slice(1)} Plan Upgrade for ${activeChannel.channelname}`,
+        description: `${plan.name.charAt(0).toUpperCase() + plan.name.slice(1)} Plan Upgrade for ${activeChannel ? activeChannel.channelname : user.name}`,
         order_id: order.id,
         handler: async function (response: any) {
           try {
@@ -92,14 +87,14 @@ const PremiumPage = () => {
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
               userId: user._id,
-              channelId: activeChannel._id,
+              channelId: activeChannel?._id || null,
               plan: plan.name,
               amount: plan.price,
             });
 
             if (verifyRes.data.success) {
               login(user); // Reload user and channels
-              toast.success(`Welcome to ${plan.name.toUpperCase()} for channel ${activeChannel.channelname}! Check your email for the invoice.`);
+              toast.success(`Welcome to ${plan.name.toUpperCase()}! Check your email for the invoice.`);
               router.push("/");
             }
           } catch (error) {
@@ -175,7 +170,7 @@ const PremiumPage = () => {
                 ))}
               </ul>
 
-              {activeChannel?.plan === plan.name ? (
+              {user?.plan === plan.name || activeChannel?.plan === plan.name ? (
                 <Button className="w-full text-lg py-6 bg-gray-200 text-gray-700 dark:bg-zinc-800 dark:text-gray-400 cursor-not-allowed" disabled>
                   Current Plan
                 </Button>
