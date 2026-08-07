@@ -229,45 +229,61 @@ export const toggleSubscribe = async (req, res) => {
 };
 
 export const downloadVideo = async (req, res) => {
-  const { channelId, videoId, videoTitle, videoUrl } = req.body;
+  const { userId, channelId, videoId, videoTitle, videoUrl } = req.body;
   
-  if (!channelId || !mongoose.Types.ObjectId.isValid(channelId)) {
-    return res.status(400).json({ message: "Invalid or missing Channel. Please select a channel to download videos." });
-  }
-
   try {
-    const channel = await Channel.findById(channelId);
-    if (!channel) return res.status(404).json({ message: "Channel not found" });
+    let targetEntity = null;
 
-    // Enforce limits for free channels (1 per day)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // 1. Try finding User first
+    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+      targetEntity = await users.findById(userId);
+    }
+    
+    // 2. Fallback to Channel if user not passed or not found
+    if (!targetEntity && channelId && mongoose.Types.ObjectId.isValid(channelId)) {
+      targetEntity = await Channel.findById(channelId);
+    }
 
-    const downloadsToday = channel.downloads.filter(d => {
-      const downloadDate = new Date(d.downloadDate);
-      downloadDate.setHours(0, 0, 0, 0);
-      return downloadDate.getTime() === today.getTime();
+    if (!targetEntity) {
+      return res.status(400).json({ message: "Must be logged in to download videos." });
+    }
+
+    // Determine plan
+    const userPlan = targetEntity.plan || "free";
+
+    // Enforce limits per 24 hours (rolling 24h window)
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    const downloads24h = (targetEntity.downloads || []).filter(d => {
+      return new Date(d.downloadDate) >= twentyFourHoursAgo;
     });
 
-    let limit = 1; // Default for free plan
-    if (channel.plan === "bronze") limit = 5;
-    if (channel.plan === "silver") limit = 20;
+    let limit = 1; // Default free plan: 1 video per 24h
+    if (userPlan === "bronze") limit = 5;
+    if (userPlan === "silver") limit = 15;
     
-    // If the plan is gold, there is no limit, so we bypass the check
-    if (channel.plan !== "gold" && downloadsToday.length >= limit) {
-      return res.status(403).json({ message: `Download limit reached for ${channel.plan || "free"} channel (${limit} per day)` });
+    // If plan is NOT gold, check 24h limit
+    if (userPlan !== "gold" && downloads24h.length >= limit) {
+      return res.status(403).json({ 
+        message: `Download limit reached for ${userPlan.toUpperCase()} plan (${limit} video${limit > 1 ? 's' : ''} per 24 hours). Upgrade your plan for more downloads!` 
+      });
     }
 
     // Record the download
-    channel.downloads.unshift({
+    if (!targetEntity.downloads) targetEntity.downloads = [];
+    targetEntity.downloads.unshift({
       videoId,
       videoTitle,
       videoUrl,
       downloadDate: new Date()
     });
 
-    const updatedChannel = await channel.save();
-    return res.status(200).json(updatedChannel);
+    const updatedEntity = await targetEntity.save();
+    return res.status(200).json({
+      success: true,
+      downloads: updatedEntity.downloads,
+      entity: updatedEntity
+    });
   } catch (error) {
     console.error("Download error:", error);
     return res.status(500).json({ message: "Something went wrong" });
