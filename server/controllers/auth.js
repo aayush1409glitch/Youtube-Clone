@@ -310,21 +310,28 @@ export const upgradePlan = async (req, res) => {
 };
 
 export const deleteDownload = async (req, res) => {
-  const { channelId, downloadId } = req.params;
+  const { channelId: entityId, downloadId } = req.params;
 
-  if (!channelId || !mongoose.Types.ObjectId.isValid(channelId)) {
-    return res.status(400).json({ message: "Invalid Channel" });
+  if (!entityId || !mongoose.Types.ObjectId.isValid(entityId)) {
+    return res.status(400).json({ message: "Invalid ID" });
   }
 
   try {
-    const channel = await Channel.findById(channelId);
-    if (!channel) return res.status(404).json({ message: "Channel not found" });
-
-    // Filter out the specific download instance using its unique _id
-    channel.downloads = channel.downloads.filter(d => d._id.toString() !== downloadId);
+    // 1. Try finding User first
+    let entity = await users.findById(entityId);
     
-    const updatedChannel = await channel.save();
-    return res.status(200).json(updatedChannel);
+    // 2. Fallback to Channel
+    if (!entity) {
+      entity = await Channel.findById(entityId);
+    }
+
+    if (!entity) return res.status(404).json({ message: "User or Channel not found" });
+
+    // Filter out the specific download instance using its _id
+    entity.downloads = (entity.downloads || []).filter(d => d._id?.toString() !== downloadId);
+    
+    const updatedEntity = await entity.save();
+    return res.status(200).json(updatedEntity);
   } catch (error) {
     console.error("Delete download error:", error);
     return res.status(500).json({ message: "Something went wrong" });
