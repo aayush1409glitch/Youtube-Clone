@@ -83,30 +83,25 @@ const VideoInfo = ({ video }: any) => {
 
   const handleDownload = async () => {
     if (!user) {
-      alert("Please log in to download videos");
-      return;
-    }
-    if (!activeChannel) {
-      toast.error("Please create or select a channel to download videos!");
+      toast.error("Please log in to download videos");
       return;
     }
     try {
-      const videoUrl = video.filepath.startsWith("http") 
-        ? video.filepath.replace("commondatastorage.googleapis.com", "storage.googleapis.com").replace("http://", "https://") 
+      const videoUrl = video.filepath?.startsWith("http") 
+        ? video.filepath.replace("http://", "https://") 
         : `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000"}/${video.filepath}`;
       
       const res = await axiosInstance.post(`/user/download`, {
-        channelId: activeChannel._id,
+        userId: user._id,
+        channelId: activeChannel?._id || null,
         videoId: video._id,
         videoTitle: video.videotitle,
         videoUrl: videoUrl
       });
       
       if (res.data) {
-        login(user); // Reload user and channels
-        
-        // Show success popup instead of forcing a physical file download
-        toast.success("Video downloaded and is available in your downloads section");
+        login(user); // Reload user
+        toast.success("Video downloaded and saved to your Downloads section!");
       }
     } catch (error: any) {
       if (error.response && error.response.status === 403) {

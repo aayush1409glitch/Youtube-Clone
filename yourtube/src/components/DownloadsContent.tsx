@@ -20,19 +20,16 @@ export default function DownloadsContent() {
   const [downloads, setDownloads] = useState<any[]>([]);
 
   useEffect(() => {
-    if (activeChannel && activeChannel.downloads) {
-      // Sort by newest first
-      const sorted = [...activeChannel.downloads].sort((a, b) => new Date(b.downloadDate).getTime() - new Date(a.downloadDate).getTime());
-      setDownloads(sorted);
-    } else {
-      setDownloads([]);
-    }
-  }, [activeChannel]);
+    const userDownloads = user?.downloads || activeChannel?.downloads || [];
+    const sorted = [...userDownloads].sort((a, b) => new Date(b.downloadDate).getTime() - new Date(a.downloadDate).getTime());
+    setDownloads(sorted);
+  }, [user, activeChannel]);
 
   const handleDeleteDownload = async (downloadId: string) => {
-    if (!activeChannel) return;
+    const entityId = user?._id || activeChannel?._id;
+    if (!entityId) return;
     try {
-      const res = await axiosInstance.delete(`/user/download/${activeChannel._id}/${downloadId}`);
+      const res = await axiosInstance.delete(`/user/download/${entityId}/${downloadId}`);
       if (res.data) {
         login(user); // Reload user and channels
         toast.success("Video removed from downloads");
@@ -51,16 +48,6 @@ export default function DownloadsContent() {
           Keep track of videos you download
         </h2>
         <p className="text-gray-600">Sign in to see your download history.</p>
-      </div>
-    );
-  }
-
-  if (!activeChannel) {
-    return (
-      <div className="text-center py-12">
-        <Download className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-        <h2 className="text-xl font-semibold mb-2">Create a Channel</h2>
-        <p className="text-gray-600">You need to select or create a channel to view downloads.</p>
       </div>
     );
   }

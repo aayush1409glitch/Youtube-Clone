@@ -25,7 +25,7 @@ const plans = [
     name: "silver",
     price: 299,
     features: [
-      "20 Video Downloads / day",
+      "15 Video Downloads / day",
       "High Quality 1080p",
       "Ad-Free Experience",
     ],
