@@ -51,7 +51,7 @@ const plans = [
 ];
 
 const PremiumPage = () => {
-  const { user, login, activeChannel } = useUser();
+  const { user, setUser, login, activeChannel } = useUser();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const router = useRouter();
 

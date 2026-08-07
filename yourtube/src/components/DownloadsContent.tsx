@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function DownloadsContent() {
-  const { user, login, activeChannel } = useUser();
+  const { user, setUser, login, activeChannel } = useUser();
   const [downloads, setDownloads] = useState<any[]>([]);
 
   useEffect(() => {
