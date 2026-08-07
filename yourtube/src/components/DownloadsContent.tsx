@@ -20,8 +20,40 @@ export default function DownloadsContent() {
   const [downloads, setDownloads] = useState<any[]>([]);
 
   useEffect(() => {
-    const userDownloads = user?.downloads || activeChannel?.downloads || [];
-    const sorted = [...userDownloads].sort((a, b) => new Date(b.downloadDate).getTime() - new Date(a.downloadDate).getTime());
+    const fetchFreshUserData = async () => {
+      if (!user?.email) return;
+      try {
+        const response = await axiosInstance.post("/user/login", {
+          email: user.email,
+          name: user.name,
+          image: user.image
+        });
+        if (response.data && response.data.result) {
+          setUser(response.data.result);
+          localStorage.setItem("user", JSON.stringify(response.data.result));
+        }
+      } catch (err) {
+        console.error("Error refreshing downloads:", err);
+      }
+    };
+    fetchFreshUserData();
+  }, []);
+
+  useEffect(() => {
+    const userDownloads = user?.downloads || [];
+    const channelDownloads = activeChannel?.downloads || [];
+    
+    // Combine both user and channel downloads to ensure NOTHING is missed
+    const combinedMap = new Map();
+    [...userDownloads, ...channelDownloads].forEach(item => {
+      if (item && item.videoId) {
+        combinedMap.set(item._id || item.videoId, item);
+      }
+    });
+
+    const sorted = Array.from(combinedMap.values()).sort(
+      (a: any, b: any) => new Date(b.downloadDate).getTime() - new Date(a.downloadDate).getTime()
+    );
     setDownloads(sorted);
   }, [user, activeChannel]);
 

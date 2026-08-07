@@ -100,10 +100,16 @@ const VideoInfo = ({ video }: any) => {
       });
       
       if (res.data) {
-        const updatedUser = res.data.entity || res.data;
-        if (updatedUser && updatedUser.email) {
-          setUser(updatedUser);
-          localStorage.setItem("user", JSON.stringify(updatedUser));
+        const updatedEntity = res.data.entity || res.data;
+        if (updatedEntity) {
+          if (updatedEntity.email) {
+            setUser({ ...updatedEntity });
+            localStorage.setItem("user", JSON.stringify(updatedEntity));
+          }
+          if (activeChannel) {
+            const updatedChan = { ...activeChannel, downloads: updatedEntity.downloads || activeChannel.downloads };
+            switchChannel(updatedChan);
+          }
         }
         toast.success("Video downloaded and saved to your Downloads section!");
       }
