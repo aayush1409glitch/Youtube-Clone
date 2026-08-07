@@ -21,7 +21,7 @@ const Sidebar = () => {
   if (!isSidebarOpen) return null;
 
   return (
-    <aside className="w-64 border-r dark:border-zinc-800 min-h-screen p-2">
+    <aside className="w-64 border-r dark:border-zinc-800 min-h-screen p-2 shrink-0 fixed inset-y-0 left-0 z-50 bg-background md:relative md:z-0">
       <div className="space-y-1">
         <Link href="/">
           <Button variant="ghost" className="w-full justify-start">

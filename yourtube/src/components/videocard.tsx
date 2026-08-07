@@ -12,7 +12,7 @@ export default function VideoCard({ video }: any) {
           <video
             src={video?.filepath?.startsWith("http") ? video?.filepath : `${process.env.NEXT_PUBLIC_BACKEND_URL}/${video?.filepath}`}
             poster={`https://picsum.photos/seed/${video?._id}/640/360`}
-            className="object-cover group-hover:scale-105 transition-transform duration-200 pointer-events-none"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200 pointer-events-none"
             muted
           />
           <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1 rounded">
