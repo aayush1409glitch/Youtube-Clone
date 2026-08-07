@@ -31,7 +31,13 @@ export default function DownloadsContent() {
     try {
       const res = await axiosInstance.delete(`/user/download/${entityId}/${downloadId}`);
       if (res.data) {
-        login(user); // Reload user and channels
+        const updated = res.data;
+        if (updated && updated.email) {
+          setUser(updated);
+          localStorage.setItem("user", JSON.stringify(updated));
+        } else {
+          setDownloads(prev => prev.filter(d => d._id !== downloadId));
+        }
         toast.success("Video removed from downloads");
       }
     } catch (error) {

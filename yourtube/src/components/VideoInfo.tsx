@@ -100,7 +100,11 @@ const VideoInfo = ({ video }: any) => {
       });
       
       if (res.data) {
-        login(user); // Reload user
+        const updatedUser = res.data.entity || res.data;
+        if (updatedUser && updatedUser.email) {
+          setUser(updatedUser);
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+        }
         toast.success("Video downloaded and saved to your Downloads section!");
       }
     } catch (error: any) {
