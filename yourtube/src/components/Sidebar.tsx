@@ -8,20 +8,35 @@ import {
   User,
 } from "lucide-react";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import Channeldialogue from "./channeldialogue";
 import { useUser } from "@/lib/AuthContext";
 
 const Sidebar = () => {
-  const { user, activeChannel, isSidebarOpen } = useUser();
+  const { user, activeChannel, isSidebarOpen, toggleSidebar } = useUser();
 
   const [isdialogeopen, setisdialogeopen] = useState(false);
-  
+
+  // Auto-close sidebar on mobile mount (< 768px)
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      if (isSidebarOpen) {
+        toggleSidebar();
+      }
+    }
+  }, []);
+
   if (!isSidebarOpen) return null;
 
   return (
-    <aside className="w-64 border-r dark:border-zinc-800 min-h-screen p-2 shrink-0 fixed inset-y-0 left-0 z-50 bg-background md:relative md:z-0">
+    <>
+      {/* Mobile Dark Backdrop Overlay */}
+      <div 
+        className="md:hidden fixed inset-0 bg-black/60 z-40 transition-opacity"
+        onClick={toggleSidebar}
+      />
+      <aside className="w-64 border-r dark:border-zinc-800 h-screen p-2 shrink-0 fixed inset-y-0 left-0 z-50 bg-background md:relative md:z-0 md:h-auto overflow-y-auto">
       <div className="space-y-1">
         <Link href="/">
           <Button variant="ghost" className="w-full justify-start">
@@ -125,6 +140,7 @@ const Sidebar = () => {
         mode="create"
       />
     </aside>
+  </>
   );
 };
 
