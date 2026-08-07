@@ -14,6 +14,7 @@ const userschema = mongoose.Schema({
     }
   ],
   plan: { type: String, default: "free" },
+  planExpiry: { type: Date },
   downloads: [
     {
       videoId: String,

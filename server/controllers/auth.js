@@ -62,6 +62,12 @@ export const login = async (req, res) => {
       });
       return res.status(201).json({ result: newUser });
     } else {
+      // Auto-expire subscription if 30 days have passed
+      if (existingUser.plan !== "free" && existingUser.planExpiry && new Date() > new Date(existingUser.planExpiry)) {
+        existingUser.plan = "free";
+        existingUser.planExpiry = null;
+      }
+
       // Auto-set theme on login (time-based)
       existingUser.theme = theme;
 
@@ -246,6 +252,13 @@ export const downloadVideo = async (req, res) => {
 
     if (!targetEntity) {
       return res.status(400).json({ message: "Must be logged in to download videos." });
+    }
+
+    // Auto-expire subscription if 30 days have passed
+    if (targetEntity.plan !== "free" && targetEntity.planExpiry && new Date() > new Date(targetEntity.planExpiry)) {
+      targetEntity.plan = "free";
+      targetEntity.planExpiry = null;
+      await targetEntity.save();
     }
 
     // Determine plan

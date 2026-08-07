@@ -59,11 +59,14 @@ export const verifyPayment = async (req, res) => {
       return res.status(400).json({ message: "Invalid payment signature" });
     }
 
+    const planExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 Days Expiry
+
     let updatedChannel = null;
     if (channelId) {
       const channel = await Channel.findById(channelId);
       if (channel) {
         channel.plan = plan;
+        channel.planExpiry = planExpiry;
         updatedChannel = await channel.save();
       }
     }
@@ -71,6 +74,7 @@ export const verifyPayment = async (req, res) => {
     const user = await users.findById(userId);
     if (user) {
       user.plan = plan;
+      user.planExpiry = planExpiry;
       await user.save();
     }
 

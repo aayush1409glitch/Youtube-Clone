@@ -7,6 +7,7 @@ const channelschema = mongoose.Schema({
   avatar: { type: String },
   joinedon: { type: Date, default: Date.now },
   plan: { type: String, default: "free" },
+  planExpiry: { type: Date },
   downloads: [
     {
       videoId: String,
