@@ -183,7 +183,7 @@ const PremiumPage = () => {
                 <Button 
                   className={`w-full text-lg py-6 text-white shadow-md transition-transform hover:scale-105 ${plan.bg} ${plan.hover}`}
                   onClick={() => handleUpgrade(plan)}
-                  disabled={loadingPlan === plan.name || !activeChannel}
+                  disabled={loadingPlan === plan.name}
                 >
                   {loadingPlan === plan.name ? "Processing..." : `Get ${plan.name}`}
                 </Button>
