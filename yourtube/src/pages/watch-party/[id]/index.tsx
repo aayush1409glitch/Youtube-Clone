@@ -314,16 +314,16 @@ export default function WatchParty() {
   if (!videoData) return <div className="p-8 text-center text-xl">Loading Watch Party...</div>;
 
   return (
-    <div className="h-screen w-full flex bg-gray-900 text-white overflow-hidden">
+    <div className="min-h-screen w-full flex flex-col md:flex-row bg-zinc-950 text-white overflow-x-hidden">
       {/* LEFT SIDE: VIDEO PLAYER & CALL GRID */}
-      <div className="flex-1 flex flex-col p-4 overflow-y-auto">
+      <div className="flex-1 flex flex-col p-3 sm:p-6 overflow-y-auto">
         
         {/* Main Sync Video */}
-        <div className="w-full max-h-[65vh] flex justify-center bg-black rounded-xl overflow-hidden shadow-2xl relative mb-4 shrink-0">
+        <div className="w-full aspect-video max-h-[60vh] flex justify-center bg-black rounded-2xl overflow-hidden shadow-2xl border border-zinc-800 relative mb-4 shrink-0">
           <video
             ref={videoRef}
             src={videoData.filepath.startsWith("http") ? videoData.filepath.replace("commondatastorage.googleapis.com", "storage.googleapis.com").replace("http://", "https://") : `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000"}/${videoData.filepath}`}
-            className="w-full h-full max-h-[65vh] object-contain"
+            className="w-full h-full object-contain"
             controls
             autoPlay
             muted
@@ -332,18 +332,29 @@ export default function WatchParty() {
           />
         </div>
         
-        <div className="mb-4">
-          <h1 className="text-lg font-semibold">{videoData.videotitle}</h1>
-          <p className="text-sm text-gray-400">Host: {user.name} • Room: {roomId}</p>
+        <div className="mb-4 bg-zinc-900/80 p-4 rounded-xl border border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h1 className="text-base sm:text-xl font-bold text-white tracking-tight">{videoData.videotitle}</h1>
+            <p className="text-xs sm:text-sm text-zinc-400 mt-1">Host: <span className="text-zinc-200 font-medium">{user.name}</span> • Room: <span className="font-mono text-blue-400">{roomId}</span></p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-1.5" />
+              Live Sync
+            </span>
+          </div>
         </div>
 
         {/* Video Call Grid */}
-        <div className="flex-1 bg-gray-800 rounded-xl p-4 flex items-center justify-center border border-gray-700">
-           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+        <div className="bg-zinc-900/60 backdrop-blur rounded-2xl p-4 border border-zinc-800/80 mb-4">
+           <h3 className="text-xs font-semibold uppercase text-zinc-400 tracking-wider mb-3">Participants ({peers.length + 1})</h3>
+           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 w-full">
               {/* Local User */}
-              <div className="bg-gray-700 aspect-video rounded-lg flex items-center justify-center text-gray-400 relative overflow-hidden">
+              <div className="bg-zinc-800 aspect-video rounded-xl flex items-center justify-center text-zinc-400 relative overflow-hidden border border-zinc-700/50 shadow-md">
                  <video playsInline muted ref={userVideo} autoPlay className="w-full h-full object-cover" />
-                 <span className="absolute bottom-2 left-2 bg-black bg-opacity-50 px-2 py-1 rounded text-xs">You</span>
+                 <span className="absolute bottom-2 left-2 bg-black/70 backdrop-blur text-white px-2 py-0.5 rounded-md text-xs font-medium border border-white/10">
+                   You {isMuted && "🔇"}
+                 </span>
               </div>
               
               {/* Remote Peers */}
@@ -356,24 +367,24 @@ export default function WatchParty() {
         </div>
 
         {/* Control Bar */}
-        <div className="h-20 bg-gray-800 rounded-xl mt-4 flex items-center justify-center gap-4 px-6 border border-gray-700">
-          <Button onClick={toggleMute} variant="secondary" className={`rounded-full w-12 h-12 p-0 border-0 ${isMuted ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-700 hover:bg-gray-600'}`}>
+        <div className="bg-zinc-900/90 backdrop-blur-md rounded-2xl p-3 flex items-center justify-center gap-2 sm:gap-4 border border-zinc-800 shadow-xl">
+          <Button onClick={toggleMute} variant="secondary" className={`rounded-xl w-11 h-11 p-0 border transition-all ${isMuted ? 'bg-red-600/90 hover:bg-red-600 border-red-500' : 'bg-zinc-800 hover:bg-zinc-700 border-zinc-700'}`}>
             {isMuted ? <MicOff className="w-5 h-5 text-white" /> : <Mic className="w-5 h-5 text-white" />}
           </Button>
-          <Button onClick={toggleVideo} variant="secondary" className={`rounded-full w-12 h-12 p-0 border-0 ${isVideoOff ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-700 hover:bg-gray-600'}`}>
+          <Button onClick={toggleVideo} variant="secondary" className={`rounded-xl w-11 h-11 p-0 border transition-all ${isVideoOff ? 'bg-red-600/90 hover:bg-red-600 border-red-500' : 'bg-zinc-800 hover:bg-zinc-700 border-zinc-700'}`}>
             {isVideoOff ? <VideoOff className="w-5 h-5 text-white" /> : <Video className="w-5 h-5 text-white" />}
           </Button>
-          <Button onClick={toggleScreenShare} variant="secondary" className={`rounded-full w-12 h-12 p-0 border-0 ${isScreenSharing ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-700 hover:bg-gray-600'}`}>
+          <Button onClick={toggleScreenShare} variant="secondary" className={`rounded-xl w-11 h-11 p-0 border transition-all ${isScreenSharing ? 'bg-blue-600 hover:bg-blue-700 border-blue-500' : 'bg-zinc-800 hover:bg-zinc-700 border-zinc-700'}`}>
             <MonitorUp className="w-5 h-5 text-white" />
           </Button>
-          <Button onClick={toggleRecording} variant="secondary" className={`rounded-full w-12 h-12 p-0 border-0 ${isRecording ? 'bg-red-600 hover:bg-red-700 animate-pulse' : 'bg-gray-700 hover:bg-gray-600'}`}>
+          <Button onClick={toggleRecording} variant="secondary" className={`rounded-xl w-11 h-11 p-0 border transition-all ${isRecording ? 'bg-red-600/90 hover:bg-red-600 border-red-500 animate-pulse' : 'bg-zinc-800 hover:bg-zinc-700 border-zinc-700'}`}>
             {isRecording ? <Square className="w-5 h-5 text-white fill-white" /> : <Circle className="w-5 h-5 text-red-500 fill-red-500" />}
           </Button>
-          <Button onClick={() => setShowChat(!showChat)} variant="secondary" className={`rounded-full w-12 h-12 p-0 border-0 ${showChat ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-700 hover:bg-gray-600'}`}>
+          <Button onClick={() => setShowChat(!showChat)} variant="secondary" className={`rounded-xl w-11 h-11 p-0 border transition-all ${showChat ? 'bg-blue-600 hover:bg-blue-700 border-blue-500' : 'bg-zinc-800 hover:bg-zinc-700 border-zinc-700'}`}>
             <MessageCircle className="w-5 h-5 text-white" />
           </Button>
-          <Button onClick={() => router.push("/")} variant="destructive" className="rounded-full w-16 h-12 px-0 bg-red-600 hover:bg-red-700">
-            <PhoneOff className="w-5 h-5" />
+          <Button onClick={() => router.push("/")} variant="destructive" className="rounded-xl px-4 h-11 bg-red-600 hover:bg-red-700 font-semibold shadow-lg shadow-red-900/20">
+            <PhoneOff className="w-5 h-5 mr-1.5" /> Leave
           </Button>
         </div>
         
@@ -381,22 +392,26 @@ export default function WatchParty() {
 
       {/* RIGHT SIDE: CHAT PANEL */}
       {showChat && (
-        <div className="w-80 bg-gray-800 border-l border-gray-700 flex flex-col h-full shadow-xl">
-          <div className="p-4 border-b border-gray-700 bg-gray-900">
-            <h2 className="font-semibold text-lg flex items-center gap-2">
-              <MessageCircle className="w-5 h-5" />
+        <div className="w-full md:w-80 lg:w-96 bg-zinc-900 border-t md:border-t-0 md:border-l border-zinc-800 flex flex-col h-[500px] md:h-auto shadow-2xl shrink-0">
+          <div className="p-4 border-b border-zinc-800 bg-zinc-950 flex items-center justify-between">
+            <h2 className="font-bold text-base flex items-center gap-2 text-white">
+              <MessageCircle className="w-5 h-5 text-blue-500" />
               Party Chat
             </h2>
+            <span className="text-xs text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded-full">{messages.length} msgs</span>
           </div>
           
-          <div className="flex-1 p-4 overflow-y-auto space-y-4">
+          <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-zinc-900/40">
             {messages.length === 0 ? (
-              <p className="text-gray-500 text-center mt-10 text-sm">No messages yet. Say hi!</p>
+              <div className="text-zinc-500 text-center my-auto py-12 text-sm flex flex-col items-center">
+                <MessageCircle className="w-8 h-8 opacity-30 mb-2" />
+                No messages yet. Say hi to the room!
+              </div>
             ) : (
               messages.map((msg, idx) => (
                 <div key={idx} className={`flex flex-col ${msg.senderId === user._id ? 'items-end' : 'items-start'}`}>
-                  <span className="text-xs text-gray-400 mb-1">{msg.senderName} • {msg.time}</span>
-                  <div className={`px-4 py-2 rounded-2xl max-w-[90%] break-words ${msg.senderId === user._id ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-700 text-gray-100 rounded-bl-none'}`}>
+                  <span className="text-[11px] text-zinc-400 mb-1 font-medium">{msg.senderName} • {msg.time}</span>
+                  <div className={`px-3.5 py-2 rounded-2xl text-xs sm:text-sm max-w-[85%] break-words shadow-sm ${msg.senderId === user._id ? 'bg-blue-600 text-white rounded-br-xs' : 'bg-zinc-800 text-zinc-100 border border-zinc-700/50 rounded-bl-xs'}`}>
                     {msg.text}
                   </div>
                 </div>
@@ -404,16 +419,16 @@ export default function WatchParty() {
             )}
           </div>
 
-          <div className="p-4 bg-gray-900 border-t border-gray-700">
+          <div className="p-3 bg-zinc-950 border-t border-zinc-800">
             <form onSubmit={handleSendMessage} className="flex gap-2">
               <input
                 type="text"
                 value={currentMessage}
                 onChange={(e) => setCurrentMessage(e.target.value)}
                 placeholder="Type a message..."
-                className="flex-1 bg-gray-800 text-white border-0 rounded-full px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                className="flex-1 bg-zinc-800 text-white border border-zinc-700/60 rounded-full px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-xs sm:text-sm placeholder:text-zinc-500"
               />
-              <Button type="submit" className="rounded-full bg-blue-600 hover:bg-blue-700 px-4">Send</Button>
+              <Button type="submit" className="rounded-full bg-blue-600 hover:bg-blue-700 px-4 text-xs sm:text-sm font-semibold shadow-md shadow-blue-900/30">Send</Button>
             </form>
           </div>
         </div>

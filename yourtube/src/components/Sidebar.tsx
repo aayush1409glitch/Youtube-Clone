@@ -36,28 +36,28 @@ const Sidebar = () => {
         className="md:hidden fixed inset-0 bg-black/60 z-40 transition-opacity"
         onClick={toggleSidebar}
       />
-      <aside className="w-64 border-r dark:border-zinc-800 h-screen p-2 shrink-0 fixed inset-y-0 left-0 z-50 bg-background md:relative md:z-0 md:h-auto overflow-y-auto">
+      <aside className="w-64 border-r border-gray-200 dark:border-zinc-800 h-screen p-2 shrink-0 fixed inset-y-0 left-0 z-50 bg-white dark:bg-zinc-900 text-gray-900 dark:text-white md:relative md:z-0 md:h-auto overflow-y-auto">
       <div className="space-y-1">
         <Link href="/">
-          <Button variant="ghost" className="w-full justify-start">
+          <Button variant="ghost" className="w-full justify-start text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-zinc-800">
             <Home className="w-5 h-5 mr-3" />
             Home
           </Button>
         </Link>
         <Link href="/">
-          <Button variant="ghost" className="w-full justify-start">
+          <Button variant="ghost" className="w-full justify-start text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-zinc-800">
             <Compass className="w-5 h-5 mr-3" />
             Explore
           </Button>
         </Link>
         <Link href="/">
-          <Button variant="ghost" className="w-full justify-start">
+          <Button variant="ghost" className="w-full justify-start text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-zinc-800">
             <PlaySquare className="w-5 h-5 mr-3" />
             Subscriptions
           </Button>
         </Link>
         <Link href="/premium">
-          <Button variant="ghost" className="w-full justify-start text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50">
+          <Button variant="ghost" className="w-full justify-start text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50 dark:hover:bg-yellow-950/30">
             <svg className="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
             </svg>

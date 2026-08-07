@@ -123,29 +123,45 @@ const VideoInfo = ({ video }: any) => {
     }
   };
 
+  useEffect(() => {
+    const checkLike = async () => {
+      if (user && video?._id) {
+        try {
+          const res = await axiosInstance.get(`/like/status/${video._id}/${user._id}`);
+          if (res.data) {
+            setIsLiked(!!res.data.liked);
+            setIsDisliked(!!res.data.disliked);
+            if (typeof res.data.likes === "number") setlikes(res.data.likes);
+            if (typeof res.data.dislikes === "number") setDislikes(res.data.dislikes);
+          }
+        } catch (error) {
+          console.log("Error checking like status:", error);
+        }
+      }
+    };
+    checkLike();
+  }, [user, video]);
+
   const handleLike = async () => {
-    if (!user) return;
+    if (!user) {
+      toast.error("Please log in to like videos");
+      return;
+    }
     try {
       const res = await axiosInstance.post(`/like/${video._id}`, {
         userId: user?._id,
       });
-      if (res.data.liked) {
-        if (isLiked) {
-          setlikes((prev: any) => prev - 1);
-          setIsLiked(false);
-        } else {
-          setlikes((prev: any) => prev + 1);
-          setIsLiked(true);
-          if (isDisliked) {
-            setDislikes((prev: any) => prev - 1);
-            setIsDisliked(false);
-          }
-        }
+      if (res.data) {
+        setIsLiked(res.data.liked);
+        setIsDisliked(res.data.disliked);
+        if (typeof res.data.likes === "number") setlikes(res.data.likes);
+        if (typeof res.data.dislikes === "number") setDislikes(res.data.dislikes);
       }
     } catch (error) {
       console.log(error);
     }
   };
+
   const handleWatchLater = async () => {
     try {
       const res = await axiosInstance.post(`/watch/${video._id}`, {
@@ -160,24 +176,21 @@ const VideoInfo = ({ video }: any) => {
       console.log(error);
     }
   };
+
   const handleDislike = async () => {
-    if (!user) return;
+    if (!user) {
+      toast.error("Please log in to dislike videos");
+      return;
+    }
     try {
-      const res = await axiosInstance.post(`/like/${video._id}`, {
+      const res = await axiosInstance.post(`/like/dislike/${video._id}`, {
         userId: user?._id,
       });
-      if (!res.data.liked) {
-        if (isDisliked) {
-          setDislikes((prev: any) => prev - 1);
-          setIsDisliked(false);
-        } else {
-          setDislikes((prev: any) => prev + 1);
-          setIsDisliked(true);
-          if (isLiked) {
-            setlikes((prev: any) => prev - 1);
-            setIsLiked(false);
-          }
-        }
+      if (res.data) {
+        setIsLiked(res.data.liked);
+        setIsDisliked(res.data.disliked);
+        if (typeof res.data.likes === "number") setlikes(res.data.likes);
+        if (typeof res.data.dislikes === "number") setDislikes(res.data.dislikes);
       }
     } catch (error) {
       console.log(error);
